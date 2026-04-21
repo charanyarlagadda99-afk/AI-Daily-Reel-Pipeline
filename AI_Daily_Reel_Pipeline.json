@@ -1,0 +1,1104 @@
+{
+  "name": "AI_Daily_Reel_Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "id": "c2f7a80b-caa8-445c-a149-8b5995a21d7c",
+      "name": "Daily 6 AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "topic",
+              "name": "topic",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "41009d99-81d5-455a-b49a-e5eac041b1c8",
+      "name": "Extract Topic",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "script",
+              "name": "script",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "topic",
+              "name": "topic",
+              "value": "={{ $(\"Extract Topic\").item.json.topic }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "59335a69-2c54-451a-9676-bf1d5f31d273",
+      "name": "Extract Script",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2064,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "audio_url",
+              "name": "audio_url",
+              "value": "={{ $json.url.replace(\"?dl=0\", \"?dl=1\") }}",
+              "type": "string"
+            },
+            {
+              "id": "script",
+              "name": "script",
+              "value": "={{ $(\"Extract Script\").item.json.script }}",
+              "type": "string"
+            },
+            {
+              "id": "topic",
+              "name": "topic",
+              "value": "={{ $(\"Extract Script\").item.json.topic }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "37862fbf-5c31-475f-abe3-0fe57a3a3355",
+      "name": "Extract Audio URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3424,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "id": "051541d7-2e58-4de6-8cfd-f832b88a8033",
+      "name": "Wait 30 Seconds",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4288,
+        304
+      ],
+      "webhookId": "ba42ea09-72c5-40ce-8729-0d3232a599ff"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "render_id",
+              "name": "render_id",
+              "value": "={{ $json.response.id }}",
+              "type": "string"
+            },
+            {
+              "id": "script",
+              "name": "script",
+              "value": "={{ $(\"Extract Pexels Video URL\").item.json.script }}",
+              "type": "string"
+            },
+            {
+              "id": "topic",
+              "name": "topic",
+              "value": "={{ $(\"Extract Pexels Video URL\").item.json.topic }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "88632283-193e-4183-a654-0fdd4b032396",
+      "name": "Extract Render ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4064,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"timeline\": {\n    \"soundtrack\": {\n      \"src\": \"{{ ($node['Extract Audio URL1'].json['url'] || 'https://www.dropbox.com/scl/fi/xyd1kmb313pbhy3jmzb9l/voiceover_-execution.id.mp3?rlkey=l3j84br9zcz72i30zwr1k0jpa&dl=0').replace('dl=0','dl=1') }}\",\n      \"effect\": \"fadeInFadeOut\"\n    },\n    \"tracks\": [\n      {\n        \"clips\": [\n          {\n            \"asset\": {\n              \"type\": \"video\",\n              \"src\": \"{{ $node['Extract Pexels Video URL'].json['pexels_video_url'] }}\"\n            },\n            \"start\": 0,\n            \"length\": 30,\n            \"fit\": \"cover\"\n          }\n        ]\n      },\n      {\n        \"clips\": [\n          {\n            \"asset\": {\n              \"type\": \"html\",\n              \"html\": \"<p style=\\\"font-family: Impact, sans-serif; font-size: 40px; color: white; text-align: center; background: rgba(0,0,0,0.7);\\\">{{ ($node['Extract Script']?.json['script'] || 'AI is changing the world fast.').split('.')[0] }}</p>\",\n              \"width\": 600,\n              \"height\": 400\n            },\n            \"start\": 0,\n            \"length\": 30,\n            \"position\": \"center\"\n          }\n        ]\n      }\n    ]\n  },\n  \"output\": {\n    \"format\": \"mp4\",\n    \"resolution\": \"hd\",\n    \"aspectRatio\": \"9:16\"\n  }\n}",
+        "options": {}
+      },
+      "id": "e5e7a521-2a7b-4e8f-a2a3-7abca9349919",
+      "name": "Merge Render Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4736,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "render_complete",
+              "leftValue": "={{ $json.render_status }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "done"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e699378d-a346-4784-9cdd-d8e397be1360",
+      "name": "Check Render Complete",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4960,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "caption",
+              "name": "caption",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "final_video_url",
+              "name": "final_video_url",
+              "value": "=\"length\": {{ $node[\"Murf TTS\"].json[\"audio_duration\"] || 30 }}",
+              "type": "string"
+            },
+            {
+              "id": "script",
+              "name": "script",
+              "value": "={{ $node[\"Extract Script\"].json[\"script\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "topic",
+              "name": "topic",
+              "value": "={{ $node[\"Extract Topic\"].json[\"topic\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6b42f70f-c91c-4d8e-842e-ad94d3f70e46",
+      "name": "Extract Caption",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5760,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1BoA2EcB8SGpdgWFNfBRWNbk1hVtwEciMsTYTVQWRigY",
+          "mode": "list",
+          "cachedResultName": "AI_REEL_LOG",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BoA2EcB8SGpdgWFNfBRWNbk1hVtwEciMsTYTVQWRigY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BoA2EcB8SGpdgWFNfBRWNbk1hVtwEciMsTYTVQWRigY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "DATE": "={{ $now }}",
+            "TOPIC": "={{ $node[\"Extract Topic\"].json[\"topic\"] }}",
+            "VIDEO URL": "={{ $node[\"Shotstack - Check Status\"].json[\"response\"][\"url\"] }}",
+            "SCRIPT": "={{ $('Extract Caption').item.json.script }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "DATE",
+              "displayName": "DATE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TOPIC",
+              "displayName": "TOPIC",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SCRIPT",
+              "displayName": "SCRIPT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VIDEO URL",
+              "displayName": "VIDEO URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PLATFORM",
+              "displayName": "PLATFORM",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "05987e81-efdb-456a-b214-a4a54b18c166",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6208,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FQlWoicTgAuLEWoM",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=artificial+intelligence+OR+AI+technology+when:1d&hl=en-US&gl=US&ceid=US:en",
+        "options": {}
+      },
+      "id": "f1ea3da5-c25f-4229-a080-5a320304e6f1",
+      "name": "Fetch AI News RSS",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this news article and create a viral short-form video topic.\n\nArticle Title: {{ $json.title }}\nContent: {{ $json.content }}\n\nOutput ONLY:\n1. A 5-word headline\n2. A 3-sentence summary (under 90 words total) that:\n   - Involves a real person or company\n   - Has a counterintuitive or shocking hook\n   - Ends with a societal implication\n\nFormat:\nHeadline: [5 words]\nSummary: [3 sentences]",
+        "options": {
+          "systemMessage": "You are a viral content analyzer. Extract shocking, counterintuitive stories from news articles and format them for short-form video."
+        }
+      },
+      "id": "62194519-28be-4b6e-b330-2e7ed849e54d",
+      "name": "Summarize News to Topic",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        912,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a reel script about: {{ $json.topic }}",
+        "options": {
+          "systemMessage": "You are a viral short-form video scriptwriter. Write scripts that open with a shocking declarative statement, follow with 4 escalating fact-sentences, end with a societal implication, and close with: Join my WhatsApp community. Under 100 words total. No hashtags. No emojis in the body."
+        }
+      },
+      "id": "2181a04e-d9da-43a3-9f26-b2b79d48e126",
+      "name": "Write Viral Script",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1712,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/videos/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "{{ $node[\"Extract Topic\"].json[\"topic\"] }}"
+            },
+            {
+              "name": "orientation",
+              "value": "portrait"
+            },
+            {
+              "name": "size",
+              "value": "medium"
+            },
+            {
+              "name": "per_page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4226c9d0-5dc3-42bb-82b5-76fcdd040db2",
+      "name": "Search Pexels for Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3216,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "iIWVCHyX2uDEimrO",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pexels_video_url",
+              "name": "pexels_video_url",
+              "value": "={{ $('Search Pexels for Video').item.json.videos[0].video_files[0].link }}",
+              "type": "string"
+            },
+            {
+              "id": "audio_url",
+              "name": "audio_url",
+              "value": "={{ $(\"Extract Audio URL\").item.json.audio_url }}",
+              "type": "string"
+            },
+            {
+              "id": "script",
+              "name": "script",
+              "value": "={{ $(\"Extract Audio URL\").item.json.script }}",
+              "type": "string"
+            },
+            {
+              "id": "topic",
+              "name": "topic",
+              "value": "={{ $(\"Extract Audio URL\").item.json.topic }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "edee7079-76d4-450d-b35c-af073796c76f",
+      "name": "Extract Pexels Video URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3616,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.shotstack.io/stage/render",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"timeline\": {\n    \"soundtrack\": {\n      \"src\": \"{{ $node[\"HTTP Request\"].json[\"data\"][\"url\"].replace(\"tmpfiles.org/\", \"tmpfiles.org/dl/\") }}\",\n      \"effect\": \"fadeInFadeOut\"\n    },\n    \"tracks\": [\n      {\n        \"clips\": [\n          {\n            \"asset\": {\n              \"type\": \"video\",\n              \"src\": \"{{ $node[\"Extract Pexels Video URL\"].json[\"pexels_video_url\"] }}\"\n            },\n            \"start\": 0,\n            \"length\": {{ $node[\"Murf TTS\"].json[\"audioLengthInSeconds\"] }},\n            \"fit\": \"cover\"\n          }\n        ]\n      }\n    ]\n  },\n  \"output\": {\n    \"format\": \"mp4\",\n    \"aspectRatio\": \"9:16\",\n    \"resolution\": \"hd\"\n  }\n}",
+        "options": {}
+      },
+      "id": "210cc137-e856-4a27-8e91-18ffe23ca0e6",
+      "name": "Shotstack - Render Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3840,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "w2ymtiwWBFF6DCG6",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ \"https://api.shotstack.io/stage/render/\" + $node[\"Shotstack - Render Video\"].json[\"response\"][\"id\"] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "f1a974c9-6a05-4d51-aa46-69fc0f35f2b6",
+      "name": "Shotstack - Check Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4512,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9nyDBaqsAJ6MVchV",
+          "name": "Header Auth account 3"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write an Instagram caption for this reel script:\n\n{{ $json.script }}",
+        "options": {
+          "systemMessage": "You are a social media caption writer. Keep captions under 150 characters. Add 5 relevant hashtags. End with: Join my WhatsApp community. Link in bio."
+        }
+      },
+      "id": "e93a1ed9-73d1-43c2-bf70-b3a81246be7e",
+      "name": "Generate Caption",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5408,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1495694500096512101/eYJ8Dx0nyUXBNgc67aslCa4BdZHMMlDbXUG4Q6RPSp629yeRtF4FO13sDnHqLtUGas6p",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"content\": \"✅ Reel posted successfully!\\n\\n**Topic:** \" + $(\"Extract Caption\").item.json.topic.split(\"\\n\")[0] + \"\\n**Video:** \" + $(\"Extract Caption\").item.json.final_video_url } }}",
+        "options": {}
+      },
+      "id": "1114f2e6-a933-4b47-83fd-2125cbbbd3e0",
+      "name": "Discord - Success Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        6432,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1495694500096512101/eYJ8Dx0nyUXBNgc67aslCa4BdZHMMlDbXUG4Q6RPSp629yeRtF4FO13sDnHqLtUGas6p",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"content\": \"❌ ERROR: Buffer post failed\\n\\nWorkflow: AI_Daily_Reel_Pipeline\\nTime: \" + $now.toISO() } }}",
+        "options": {}
+      },
+      "id": "f0ef446b-afc2-4eb0-8e5d-f15c3c530e0c",
+      "name": "Error - Buffer Post Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        6208,
+        208
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "8e074d24-61e4-4b61-a62f-40de569d30f0",
+      "name": "Wait Before Script (Throttle)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1488,
+        400
+      ],
+      "webhookId": "464da6d0-46d1-4f28-a1cb-63cbcd8d4d1b"
+    },
+    {
+      "parameters": {},
+      "id": "31c558e0-5c1c-4a6a-b427-dd8f8a45e3d6",
+      "name": "Wait Before Caption (Throttle)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5184,
+        304
+      ],
+      "webhookId": "4ce154d9-cfed-471e-8366-0f9a6c281753"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        992,
+        624
+      ],
+      "id": "bc50e482-8590-4d82-a715-b2f961dbf820",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "jCqHUtAXbrQ6LmFT",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "bc5024a5-9b65-496f-8f9a-0a005a43def7",
+      "name": "Limit to 1 Article",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        688,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        624
+      ],
+      "id": "124ba455-8328-4dd0-ba37-79e2a9abe349",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "jCqHUtAXbrQ6LmFT",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.murf.ai/v1/speech/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"voiceId\": \"en-US-marcus\",\n  \"text\": \"{{ $node['Extract Script'].json['script'].replace(/[\\n\\r]/g, ' ').replace(/\\\"/g, '\\\\\\\"') }}\",\n  \"format\": \"MP3\",\n  \"encodeAsBase64\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "e21d707e-ddb5-4c22-aae9-f3143186d8df",
+      "name": "Murf TTS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2288,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "c1MiBsCCpWOOEmAo",
+          "name": "Header Auth account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "encodedAudio",
+        "options": {
+          "fileName": "voiceover.mp3"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2496,
+        400
+      ],
+      "id": "ab4743fb-0307-4c1f-9d72-a9396ae07e4c",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        5280,
+        512
+      ],
+      "id": "3542cb09-3162-4521-917d-b6ace07f99ba",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "jCqHUtAXbrQ6LmFT",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tmpfiles.org/api/v1/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2912,
+        224
+      ],
+      "id": "2f56add0-4561-4ab8-beb3-6575a70a4d87",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily 6 AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch AI News RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Topic": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Script (Throttle)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Script": {
+      "main": [
+        [
+          {
+            "node": "Murf TTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Audio URL": {
+      "main": [
+        [
+          {
+            "node": "Extract Pexels Video URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 30 Seconds": {
+      "main": [
+        [
+          {
+            "node": "Shotstack - Check Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Render ID": {
+      "main": [
+        [
+          {
+            "node": "Wait 30 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Render Data": {
+      "main": [
+        [
+          {
+            "node": "Check Render Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Render Complete": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Caption (Throttle)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 30 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Caption": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Discord - Success Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch AI News RSS": {
+      "main": [
+        [
+          {
+            "node": "Limit to 1 Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize News to Topic": {
+      "main": [
+        [
+          {
+            "node": "Extract Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Viral Script": {
+      "main": [
+        [
+          {
+            "node": "Extract Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Pexels for Video": {
+      "main": [
+        [
+          {
+            "node": "Extract Audio URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Pexels Video URL": {
+      "main": [
+        [
+          {
+            "node": "Shotstack - Render Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shotstack - Render Video": {
+      "main": [
+        [
+          {
+            "node": "Extract Render ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shotstack - Check Status": {
+      "main": [
+        [
+          {
+            "node": "Merge Render Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Caption": {
+      "main": [
+        [
+          {
+            "node": "Extract Caption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Script (Throttle)": {
+      "main": [
+        [
+          {
+            "node": "Write Viral Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Caption (Throttle)": {
+      "main": [
+        [
+          {
+            "node": "Generate Caption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarize News to Topic",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to 1 Article": {
+      "main": [
+        [
+          {
+            "node": "Summarize News to Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Viral Script",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Murf TTS": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord - Success Notification": {
+      "main": [
+        []
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Caption",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Search Pexels for Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "76d526fb-d431-4324-a780-c9d3bf735e0c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "08e2774d1154f56fd34215835e48bd75593ac0cac571fcd8ec14971aecee7aae"
+  },
+  "id": "4cHD0tjDzmn0hqoS",
+  "tags": []
+}
